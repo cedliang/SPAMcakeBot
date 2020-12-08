@@ -10,6 +10,7 @@ async def on_ready():
     print('Bot initialised.')
 
 
+
 #COGS SETUP
 @client.command()
 async def load(ctx, extension):
