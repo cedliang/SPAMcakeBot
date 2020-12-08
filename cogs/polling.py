@@ -25,6 +25,22 @@ class Polling(commands.Cog):
                 await ctx.send('Poll creation cancelled.')
                 return
 
+            question = pollquestion.content
+
+            #prompt for poll description
+            await ctx.send("Type your poll description, or type skip if the question is self explanatory.")
+            polldescription = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 180.0)
+
+
+            if polldescription.content == 'quit':
+                await ctx.send('Poll creation cancelled.')
+                return
+            elif polldescription.content == 'skip':
+                description = None
+            else:
+                description = polldescription.content
+
+
             #PROMPT FOR OPTIONS
             options = []
             takingOptions = True
@@ -39,7 +55,10 @@ class Polling(commands.Cog):
                     option = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
 
                     if option.content == 'done':
-                        takingOptions = False
+                        if len(options) > 0:
+                            takingOptions = False
+                        else:
+                            await ctx.send("At least one option must be provided!")
                     elif option.content == 'quit':
                         await ctx.send('Poll creation cancelled.')
                         return
@@ -50,10 +69,6 @@ class Polling(commands.Cog):
 
                         optionText = option.content[2:]
                         options.append([optionEmote, optionText])
-
-
-
-
 
                 except IndexError:
                     await ctx.send("Invalid option format. Option has not been added, please try again.")
