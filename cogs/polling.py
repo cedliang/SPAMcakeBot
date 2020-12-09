@@ -115,9 +115,17 @@ class Polling(commands.Cog):
 
             pollEmbed.add_field(name = 'Options (react to vote)', value = optionsString, inline = True)
 
+            await channel.send(embed = pollEmbed)
 
-            await ctx.send(embed = pollEmbed)
+            #pollmessage contains the discord.Message which contains the embed
+            async for message in channel.history(limit = 1):
+                pollMessage = message
 
+
+            for option in options:
+                await pollMessage.add_reaction(option[0])
+
+            await channel.send("Reactions added")
 
 
 
