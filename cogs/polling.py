@@ -44,12 +44,16 @@ class Polling(commands.Cog):
             #PROMPT FOR OPTIONS
             options = []
             takingOptions = True
+            emojisDone = []
 
             while takingOptions:
-                await ctx.send("Type your poll answer.\nType the emote corresponding to the option first, then add a space, then type the answer. For example, \'👍 Yes\'.\nIf you are done with your options, type 'done'.")
-                await ctx.send("Current options:")
+
+                echoOptionsString = ''
                 for option in options:
-                    await ctx.send(f"\t{option[0]} {option[1]}")
+                    echoOptionsString += f"{option[0]} {option[1]}\n"
+
+                await ctx.send(f"Type your poll answer.\nType the emote corresponding to the option first, then add a space, then type the answer. For example, \'👍 Yes\'.\nIf you are done with your options, type 'done'.\nCurrent options:\n{echoOptionsString}")
+
 
                 try:
                     option = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
@@ -62,20 +66,62 @@ class Polling(commands.Cog):
                     elif option.content == 'quit':
                         await ctx.send('Poll creation cancelled.')
                         return
+
                     else:
                         optionEmote = option.content[0]
                         if (optionEmote not in UNICODE_EMOJI):
                             raise IndexError
 
-                        optionText = option.content[2:]
-                        options.append([optionEmote, optionText])
+                        elif ord(optionEmote) in emojisDone:
+                            await ctx.channel.purge(limit = 2)
+                            await ctx.send('This emoji has already been used! Use a unique emoji.')
+
+                        else:
+                            optionText = option.content[2:]
+                            options.append([optionEmote, optionText])
+
+                            emojisDone.append(ord(optionEmote))
+
+                            await ctx.channel.purge(limit = 2)
+
 
                 except IndexError:
+                    await ctx.channel.purge(limit = 2)
                     await ctx.send("Invalid option format. Option has not been added, please try again.")
 
 
             #options taken successfully
-            await ctx.send("Next step.")
+            await ctx.send("Enter the duration for the poll to be open in a whole number of seconds. Valid values from 1 to 2592000 (30 days)")
+            takingTime = True
+            while takingTime:
+                try:
+                    timereply = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
+                    duration = int(timereply.content)
+                    if duration < 1 or duration > 2592000:
+                        await ctx.send("Invalid time entered. Please try again.")
+                    else:
+                        takingTime = False
+                except ValueError:
+                    await ctx.send("Invalid time entered. Please try again.")
+
+
+
+            optionsString = ''
+            for optionTuple in options:
+                optionsString += (f'{optionTuple[0]} {optionTuple[1]}\n')
+
+            pollEmbed = discord.Embed(title = f'Poll: {question}', description = description, color = discord.Colour.blurple())
+
+
+            pollEmbed.add_field(name = 'Options (react to vote)', value = optionsString, inline = True)
+
+
+            await ctx.send(embed = pollEmbed)
+
+
+
+
+
 
         #timeout
         except asyncio.TimeoutError:
