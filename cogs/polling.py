@@ -7,7 +7,8 @@ class Polling(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-
+        #holds the message IDs of all active polls
+        self.activePollMessageIDs = []
 
     #Prompts a user to create a poll.
     #Prompts must be submitted by the .createpoll caller, times out in 120 seconds.
@@ -115,7 +116,28 @@ class Polling(commands.Cog):
 
             pollEmbed.add_field(name = 'Options (react to vote)', value = optionsString, inline = True)
 
+            #blank field to force new line
+            pollEmbed.add_field(name = chr(173), value = chr(173), inline = True)
+            #blank field to force new line
+            pollEmbed.add_field(name = chr(173), value = chr(173), inline = True)
+
+
+
+
+
+            resultsstring = ''
+
+            for option in options:
+                resultsstring += f'{option[0]} ░░░░░░░░░░ 0% (0)\n'
+
+
+            pollEmbed.add_field(name = 'Results', value = resultsstring, inline = True)
+
+
+
             await channel.send(embed = pollEmbed)
+
+
 
             #pollmessage contains the discord.Message which contains the embed
             async for message in channel.history(limit = 1):
@@ -125,9 +147,14 @@ class Polling(commands.Cog):
             for option in options:
                 await pollMessage.add_reaction(option[0])
 
-            await channel.send("Reactions added")
+
+            await self.activePollMessageIDs.append(pollMessage.id)
 
 
+
+            await ctx.send("Poll has been created.")
+
+            #make sure on message delete that this loop ends running
 
 
 
@@ -138,6 +165,103 @@ class Polling(commands.Cog):
 
 
 
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self,payload):
+        if payload.message_id in self.activePollMessageIDs:
+            channel = await self.client.fetch_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
+            pollembed = message.embeds[0]
+
+            #makes shallow copy of reaction list and ensure entries are sorted in descending order
+            reactionslist = sorted(message.reactions[:], key = lambda reaction: reaction.count, reverse = True)
+
+            totalreactions = 0
+
+            #remove the bot's count to get the 'true' polling numbers
+            for reaction in reactionslist:
+                reaction.count -= 1
+                totalreactions += reaction.count
+
+            #removes existing embed
+            pollembed.remove_field(-1)
+
+
+            #add new embed
+            resultsstring = ''
+
+            for reaction in reactionslist:
+
+                if totalreactions > 0:
+                    reactPercentage = 100*(reaction.count / totalreactions)
+                else:
+                    reactPercentage = 0
+
+                nearestTenths = int(round(reactPercentage/100, 1) * 10)
+
+                blocksString = '█' * nearestTenths + (10-nearestTenths)*'░'
+
+                resultsstring += f'{reaction.emoji} {blocksString} {reactPercentage}% ({reaction.count})\n'
+
+
+            pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
+
+            await message.edit(embed = pollembed)
+
+
+
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self,payload):
+        if payload.message_id in self.activePollMessageIDs:
+            channel = await self.client.fetch_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
+            pollembed = message.embeds[0]
+
+            #makes shallow copy of reaction list and ensure entries are sorted in descending order
+            reactionslist = sorted(message.reactions[:], key = lambda reaction: reaction.count, reverse = True)
+
+            totalreactions = 0
+
+            #remove the bot's count to get the 'true' polling numbers
+            for reaction in reactionslist:
+                reaction.count -= 1
+                totalreactions += reaction.count
+
+            #removes existing embed
+            pollembed.remove_field(-1)
+
+
+            #add new embed
+            resultsstring = ''
+
+            for reaction in reactionslist:
+
+                if totalreactions > 0:
+                    reactPercentage = 100*(reaction.count / totalreactions)
+                else:
+                    reactPercentage = 0
+
+                nearestPercentage = round(reactPercentage)
+                fullBlocks = nearestPercentage // 10
+                rem = nearestPercentage - 10*fullBlocks
+                if rem >= 5:
+                    partialBlocks = 1
+                else:
+                    partialBlocks = 0
+
+                totalBlocks = partialBlocks + fullBlocks
+
+
+
+                blocksString = '█' * fullBlocks + partialBlocks*'▓' + (10-totalBlocks)*'░'
+
+                resultsstring += f'{reaction.emoji} {blocksString} {round(reactPercentage,1)}% ({reaction.count})\n'
+
+
+            pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
+
+            await message.edit(embed = pollembed)
 
 
 
