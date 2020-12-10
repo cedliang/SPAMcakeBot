@@ -148,13 +148,18 @@ class Polling(commands.Cog):
                 await pollMessage.add_reaction(option[0])
 
 
-            await self.activePollMessageIDs.append(pollMessage.id)
-
-
-
             await ctx.send("Poll has been created.")
 
-            #make sure on message delete that this loop ends running
+            self.activePollMessageIDs.append(pollMessage.id)
+
+            #TIMES OUT FOR TIMEOUT TIME
+            await asyncio.sleep(duration)
+
+            closeMessage = await channel.fetch_message(pollMessage.id)
+            closeEmbed = closeMessage.embeds[0]
+            closeEmbed.title = '[Closed] ' + closeEmbed.title
+            await message.edit(embed = closeEmbed)
+            self.activePollMessageIDs.remove(pollMessage.id)
 
 
 
@@ -197,16 +202,27 @@ class Polling(commands.Cog):
                 else:
                     reactPercentage = 0
 
-                nearestTenths = int(round(reactPercentage/100, 1) * 10)
+                nearestPercentage = round(reactPercentage)
+                fullBlocks = nearestPercentage // 10
+                rem = nearestPercentage - 10*fullBlocks
+                if rem >= 5:
+                    partialBlocks = 1
+                else:
+                    partialBlocks = 0
 
-                blocksString = '█' * nearestTenths + (10-nearestTenths)*'░'
+                totalBlocks = partialBlocks + fullBlocks
 
-                resultsstring += f'{reaction.emoji} {blocksString} {reactPercentage}% ({reaction.count})\n'
+
+
+                blocksString = '█' * fullBlocks + partialBlocks*'▓' + (10-totalBlocks)*'░'
+
+                resultsstring += f'{reaction.emoji} {blocksString} {round(reactPercentage,1)}% ({reaction.count})\n'
 
 
             pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
 
             await message.edit(embed = pollembed)
+
 
 
 
@@ -266,7 +282,13 @@ class Polling(commands.Cog):
 
 
 
-
+    @commands.Cog.listener()
+    async def on_message_delete(self,message):
+        try:
+            self.activePollMessageIDs.remove(message.id)
+            print('poll was removed from tracking')
+        except ValueError:
+            pass
 
 
 
