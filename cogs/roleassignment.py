@@ -7,17 +7,8 @@ class RoleAssignment(commands.Cog):
         self.client = client
 
     @commands.command()
-    async def purge(self, ctx, amount = 5):
-        await ctx.channel.purge(limit = amount + 1)
-        if amount == 1:
-            pluralstring = 'message was'
-        else:
-            pluralstring = 'messages were'
-        await ctx.send(f'{amount} {pluralstring} purged.')
-
-    @commands.command()
-    async def ping(self, ctx):
-        await ctx.send(f'{round(self.client.latency*1000)}ms')
+    async def createroleassignmentpost(self, ctx):
+        ctx.send('hi')
 
 
 def setup(client):
