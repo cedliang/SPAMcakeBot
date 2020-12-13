@@ -93,7 +93,7 @@ class Polling(commands.Cog):
             optionsString = ''
             for optionTuple in options:
                 optionsString += (f'{optionTuple[0]} {optionTuple[1]}\n')
-            pollEmbed = discord.Embed(title = f'Poll: {question}', description = description, color = discord.Colour.blurple())
+            pollEmbed = discord.Embed(title = f'Poll: {question}', description = description, color = discord.Colour.from_rgb(254, 254, 254))
             pollEmbed.add_field(name = 'Options (react to vote)', value = optionsString, inline = True)
             #blank fields to force new line
             pollEmbed.add_field(name = chr(173), value = chr(173), inline = True)
