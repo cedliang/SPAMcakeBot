@@ -125,45 +125,13 @@ class Polling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self,payload):
-        if payload.message_id in self.activePollMessageIDs:
-            channel = await self.client.fetch_channel(payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
-            pollembed = message.embeds[0]
+        await self.updatePollResults(payload)
 
-            #makes shallow copy of reaction list and ensure entries are sorted in descending order
-            reactionslist = sorted(message.reactions[:], key = lambda reaction: reaction.count, reverse = True)
-            totalreactions = 0
-            #remove the bot's count to get the 'true' polling numbers
-            for reaction in reactionslist:
-                reaction.count -= 1
-                totalreactions += reaction.count
-            #removes existing embed
-            pollembed.remove_field(-1)
-
-            #add new embed
-            resultsstring = ''
-            for reaction in reactionslist:
-                if totalreactions > 0:
-                    reactPercentage = 100*(reaction.count / totalreactions)
-                else:
-                    reactPercentage = 0
-                nearestPercentage = round(reactPercentage)
-                fullBlocks = nearestPercentage // 10
-                rem = nearestPercentage - 10*fullBlocks
-                if rem >= 5:
-                    partialBlocks = 1
-                else:
-                    partialBlocks = 0
-                totalBlocks = partialBlocks + fullBlocks
-                blocksString = '█' * fullBlocks + partialBlocks*'▓' + (10-totalBlocks)*'░'
-                resultsstring += f'{reaction.emoji} {blocksString} {round(reactPercentage,1)}% ({reaction.count})\n'
-            pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
-
-            await message.edit(embed = pollembed)
-
-    # TODO: Reformat on_raw_reaction_add to call a routine that updates the polls, since the code is shared with on_raw_reaction_remove
     @commands.Cog.listener()
     async def on_raw_reaction_add(self,payload):
+        await self.updatePollResults(payload)
+
+    async def updatePollResults(self, payload):
         if payload.message_id in self.activePollMessageIDs:
             channel = await self.client.fetch_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)
