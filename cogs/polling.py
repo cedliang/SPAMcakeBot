@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import asyncio
 from emoji import UNICODE_EMOJI
+from datetime import datetime, timedelta
 
 
 class QuitException(Exception):
@@ -21,9 +22,9 @@ class Polling(commands.Cog):
     @commands.command()
     async def createpoll(self, ctx, channel : discord.TextChannel):
         """Creates a poll and adds it to self.activePollMessageIDs to be monitored by the reaction watcher function, waits for the specified timeout, then removes the poll from self.activePollMessageIDs"""
-        await ctx.send("Type your poll question, or type 'quit' anytime to cancel.")
         try:
-            #PROMPT FOR QUESTION
+            await ctx.send("Type your poll question, or type 'quit' anytime to cancel.")
+            #prompt for question
             pollquestion = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
             if pollquestion.content == 'quit':
                 raise QuitException()
@@ -97,6 +98,9 @@ class Polling(commands.Cog):
             #blank fields to force new line
             pollEmbed.add_field(name = chr(173), value = chr(173), inline = True)
             pollEmbed.add_field(name = chr(173), value = chr(173), inline = True)
+            endtime = datetime.now() + timedelta(seconds = duration)
+            endtimestring = endtime.strftime("%m/%d/%Y, %H:%M:%S")
+            pollEmbed.set_footer(text = f"Poll closes at {endtimestring}\nPoll created by {ctx.author.name}#{ctx.author.discriminator}", icon_url = ctx.author.avatar_url)
 
             resultsstring = ''
             for option in options:
@@ -119,6 +123,11 @@ class Polling(commands.Cog):
             closeMessage = await channel.fetch_message(pollMessage.id)
             closeEmbed = closeMessage.embeds[0]
             closeEmbed.title = '[Closed] ' + closeEmbed.title
+            #change 'closes' in the footer to 'closed'
+            currentFooterText = closeEmbed.footer.text
+            authoriconurl = closeEmbed.footer.icon_url
+            newFooterText = currentFooterText[:10] + 'd' + currentFooterText[11:]
+            closeEmbed.set_footer(text = newFooterText, icon_url = authoriconurl)
             await message.edit(embed = closeEmbed)
             self.activePollMessageIDs.remove(pollMessage.id)
 

@@ -12,12 +12,14 @@ class RoleAssignment(commands.Cog):
 
     @commands.command()
     async def createroleassignmentpost(self, ctx):
-        await ctx.send("Type the text to appear in the body of your message, or type quit to cancel.")
         try:
+            await ctx.send("Type the text to appear in the body of your message, or type quit to cancel.")
             bodytextmessage = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
             if bodytextmessage.content == 'quit':
                 raise QuitException()
             bodytext = bodytextmessage.content
+
+
 
 
         except asyncio.TimeoutError:
