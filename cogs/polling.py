@@ -4,6 +4,11 @@ import asyncio
 from emoji import UNICODE_EMOJI
 
 
+class QuitException(Exception):
+    """Exception to facilitate easy exit from client.wait_for in the event that 'quit' is typed"""
+    pass
+
+
 class Polling(commands.Cog):
 
     def __init__(self, client):
@@ -21,16 +26,14 @@ class Polling(commands.Cog):
             #PROMPT FOR QUESTION
             pollquestion = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
             if pollquestion.content == 'quit':
-                await ctx.send('Poll creation cancelled.')
-                return
+                raise QuitException()
             question = pollquestion.content
 
             #prompt for poll description
             await ctx.send("Type your poll description, or type skip if the question is self explanatory.")
             polldescription = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 180.0)
             if polldescription.content == 'quit':
-                await ctx.send('Poll creation cancelled.')
-                return
+                raise QuitException()
             elif polldescription.content == 'skip':
                 description = None
             else:
@@ -53,8 +56,7 @@ class Polling(commands.Cog):
                         else:
                             await ctx.send("At least one option must be provided!")
                     elif option.content == 'quit':
-                        await ctx.send('Poll creation cancelled.')
-                        return
+                        raise QuitException()
                     else:
                         optionEmote = option.content[0]
                         if (optionEmote not in UNICODE_EMOJI):
@@ -77,6 +79,8 @@ class Polling(commands.Cog):
             while takingTime:
                 try:
                     timereply = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
+                    if timereply.content == 'quit':
+                        raise QuitException()
                     duration = int(timereply.content)
                     if duration < 1 or duration > 2592000:
                         await ctx.send("Invalid time entered. Please try again.")
@@ -121,6 +125,9 @@ class Polling(commands.Cog):
         #timeout
         except asyncio.TimeoutError:
             await ctx.send('Poll creation timed out.')
+            return
+        except QuitException:
+            await ctx.send('Poll creation cancelled.')
             return
 
     @commands.Cog.listener()
