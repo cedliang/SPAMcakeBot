@@ -15,6 +15,7 @@ class Polling(commands.Cog):
     #Prompts must be submitted by the .createpoll caller, times out in 120 seconds.
     @commands.command()
     async def createpoll(self, ctx, channel : discord.TextChannel):
+        """Creates a poll and adds it to self.activePollMessageIDs to be monitored by the reaction watcher function, waits for the specified timeout, then removes the poll from self.activePollMessageIDs"""
         await ctx.send("Type your poll question, or type 'quit' anytime to cancel.")
         try:
             #PROMPT FOR QUESTION
@@ -124,13 +125,16 @@ class Polling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self,payload):
+        """Event to call updatePollResults upon reaction removal, which will update the results section of the poll embed"""
         await self.updatePollResults(payload)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self,payload):
+        """Event to call updatePollResults upon reaction addition, which will update the results section of the poll embed"""
         await self.updatePollResults(payload)
 
     async def updatePollResults(self, payload):
+        """Performs a count of the reactions of the message in which the poll is contained, and updates the Results field of the corresponding embed."""
         if payload.message_id in self.activePollMessageIDs:
             channel = await self.client.fetch_channel(payload.channel_id)
             message = await channel.fetch_message(payload.message_id)
@@ -169,6 +173,7 @@ class Polling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self,message):
+        """Removes a deleted message from the list of messages that are tracked by updatePollResults"""
         try:
             self.activePollMessageIDs.remove(message.id)
             print('poll was removed from tracking')
