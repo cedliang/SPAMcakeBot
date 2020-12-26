@@ -57,11 +57,16 @@ class RoleAssignment(commands.Cog):
     async def on_raw_reaction_add(self, payload):
         reactMessageId = str(payload.message_id)
         try:
+            #not found is handled by KeyError except
             associations = self.roleassocdict[reactMessageId]
+
             guildId = payload.guild_id
             guild = self.client.get_guild(guildId)
-            role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
-
+            try:
+                role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
+            except KeyError:
+                print("KeyError raised in emoji to role search")
+                return
             if role is not None:
                 member = guild.get_member(payload.user_id)
                 if member is not None:
@@ -71,13 +76,73 @@ class RoleAssignment(commands.Cog):
                     print("Member not found")
             else:
                 print("Role not found")
-
         except KeyError:
-            print("KeyError raised in reaction add event in roleassignment")
             return
         except Exception as e:
             print(e)
             return
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload):
+        reactMessageId = str(payload.message_id)
+        try:
+            #not found is handled by KeyError except
+            associations = self.roleassocdict[reactMessageId]
+
+            guildId = payload.guild_id
+            guild = self.client.get_guild(guildId)
+            try:
+                role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
+            except KeyError:
+                print("KeyError raised in emoji to role search")
+                return
+            if role is not None:
+                member = guild.get_member(payload.user_id)
+                if member is not None:
+                    await member.remove_roles(role)
+                    print(f"{member.name}#{member.discriminator} was unassigned the role {role.name}")
+                else:
+                    print("Member not found")
+            else:
+                print("Role not found")
+        except KeyError:
+            return
+        except Exception as e:
+            print(e)
+            return
+
+    async def updateRoles(self, payload, addRoleBool : bool):
+        reactMessageId = str(payload.message_id)
+        try:
+            #not found is handled by KeyError except
+            associations = self.roleassocdict[reactMessageId]
+
+            guildId = payload.guild_id
+            guild = self.client.get_guild(guildId)
+            try:
+                role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
+            except KeyError:
+                print("KeyError raised in emoji to role search")
+                return
+            if role is not None:
+                member = guild.get_member(payload.user_id)
+                if member is not None:
+                    if addRoleBool:
+                        await member.add_roles(role)
+                        print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
+                    else:
+                        await member.remove_roles(role)
+                        print(f"{member.name}#{member.discriminator} was unassigned the role {role.name}")
+                else:
+                    print("Member not found")
+            else:
+                print("Role not found")
+        except KeyError:
+            return
+        except Exception as e:
+            print(e)
+            return
+
 
     @commands.command()
     async def clearroleassignmentposts(self, ctx):
