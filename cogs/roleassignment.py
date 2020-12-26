@@ -59,11 +59,11 @@ class RoleAssignment(commands.Cog):
         try:
             associations = self.roleassocdict[reactMessageId]
             guildId = payload.guild_id
-            guild = discord.utils.find(lambda g : g.id == guildId, self.client.guilds)
-            role = discord.utils.get(guild.roles, name = associations[payload.emoji])
+            guild = self.client.get_guild(guildId)
+            role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
 
             if role is not None:
-                member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+                member = guild.get_member(payload.user_id)
                 if member is not None:
                     await member.add_roles(role)
                     print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
