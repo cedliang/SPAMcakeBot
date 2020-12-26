@@ -15,7 +15,7 @@ class Polling(commands.Cog):
     def __init__(self, client):
         self.client = client
         #holds the message IDs of all active polls
-        self.activePollMessageIDs = {}
+        self.activePollMessageIDs = set()
 
     #Prompts a user to create a poll.
     #Prompts must be submitted by the .createpoll caller, times out in 120 seconds.
@@ -201,6 +201,9 @@ class Polling(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Missing an argument.')
 
+    @commands.command()
+    async def checkactivepolls(self, ctx):
+        print(str(self.activePollMessageIDs))
 
 def setup(client):
     client.add_cog(Polling(client))
