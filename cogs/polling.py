@@ -15,7 +15,7 @@ class Polling(commands.Cog):
     def __init__(self, client):
         self.client = client
         #holds the message IDs of all active polls
-        self.activePollMessageIDs = []
+        self.activePollMessageIDs = {}
 
     #Prompts a user to create a poll.
     #Prompts must be submitted by the .createpoll caller, times out in 120 seconds.
@@ -115,7 +115,7 @@ class Polling(commands.Cog):
             for option in options:
                 await pollMessage.add_reaction(option[0])
             await ctx.send("Poll has been created.")
-            self.activePollMessageIDs.append(pollMessage.id)
+            self.activePollMessageIDs.add(pollMessage.id)
 
             #TIMES OUT FOR TIMEOUT TIME
             await asyncio.sleep(duration)
