@@ -36,16 +36,47 @@ class RoleAssignment(commands.Cog):
                     splitassoclist = []
                     for element in assoclist:
                         splitassoclist.append(element.split(' ', 1))
+                    appenddict = {}
+                    for element in splitassoclist:
+                        appenddict[element[0]] = element[1]
                     takingOptions = False
-            self.roleassocdict[message_id] = splitassoclist
-            #remove this after finished
-            await ctx.send(self.roleassocdict)
+            self.roleassocdict[message_id] = appenddict
+            await ctx.send(str(self.roleassocdict))
+            await ctx.send("Role associations have been created. Please manually add the reactions to the message so that others can react to it.")
 
         except asyncio.TimeoutError:
             await ctx.send('Post creation timed out.')
             return
         except QuitException:
             await ctx.send('Post creation cancelled.')
+            return
+        except Exception as e:
+            print(e)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        reactMessageId = str(payload.message_id)
+        try:
+            associations = self.roleassocdict[reactMessageId]
+            guildId = payload.guild_id
+            guild = discord.utils.find(lambda g : g.id == guildId, self.client.guilds)
+            role = discord.utils.get(guild.roles, name = associations[payload.emoji])
+
+            if role is not None:
+                member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+                if member is not None:
+                    await member.add_roles(role)
+                    print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
+                else:
+                    print("Member not found")
+            else:
+                print("Role not found")
+
+        except KeyError:
+            print("KeyError raised in reaction add event in roleassignment")
+            return
+        except Exception as e:
+            print(e)
             return
 
     @commands.command()
