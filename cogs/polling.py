@@ -204,6 +204,7 @@ class Polling(commands.Cog):
     #for debugging purposes
     @commands.command()
     async def checkactivepolls(self, ctx):
+        """Prints current active polls in terminal."""
         print(str(self.activePollMessageIDs))
 
 def setup(client):
