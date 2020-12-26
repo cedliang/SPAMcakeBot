@@ -17,8 +17,10 @@ class RoleAssignment(commands.Cog):
         try:
             takingOptions = True
             while takingOptions:
-                await ctx.send("Load the role associations with the command \'emoji rolename\'.\nFor example:\n```👍 rolename\n👎 rolename```Don't tag the role.")
+                await ctx.send("Load the role associations with the command \'emoji rolename\'.\nFor example:\n```👍 rolename\n👎 rolename```Don't tag the role. Type 'quit' to cancel.")
                 emojiassocmessage = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 180.0)
+                if emojiassocmessage.content == 'quit':
+                    raise QuitException()
                 assoclist = emojiassocmessage.content.split('\n')
                 #check correctness of assoclist
                 acceptable = True
@@ -36,6 +38,7 @@ class RoleAssignment(commands.Cog):
                         splitassoclist.append(element.split(' ', 1))
                     takingOptions = False
             self.roleassocdict[message_id] = splitassoclist
+            #remove this after finished
             await ctx.send(self.roleassocdict)
 
         except asyncio.TimeoutError:
@@ -44,6 +47,11 @@ class RoleAssignment(commands.Cog):
         except QuitException:
             await ctx.send('Post creation cancelled.')
             return
+
+    @commands.command()
+    async def clearroleassignmentposts(self, ctx):
+        self.roleassocdict = {}
+        await ctx.send(f"Role associations have been cleared. {str(self.roleassocdict)}")
 
     @createroleassignmentpost.error
     async def roleassignment_error(self, ctx, error):

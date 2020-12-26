@@ -201,6 +201,7 @@ class Polling(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Missing an argument.')
 
+    #for debugging purposes
     @commands.command()
     async def checkactivepolls(self, ctx):
         print(str(self.activePollMessageIDs))
