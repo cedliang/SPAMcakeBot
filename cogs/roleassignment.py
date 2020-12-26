@@ -13,7 +13,8 @@ class RoleAssignment(commands.Cog):
         self.roleassocdict = {}
 
     @commands.command()
-    async def createroleassignmentpost(self, ctx, message_id):
+    async def createroleassignment(self, ctx, message_id):
+        """Configure an existing message to assign roles when a reaction is added to it. Argument is the message_id."""
         try:
             takingOptions = True
             while takingOptions:
@@ -55,61 +56,11 @@ class RoleAssignment(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        reactMessageId = str(payload.message_id)
-        try:
-            #not found is handled by KeyError except
-            associations = self.roleassocdict[reactMessageId]
-
-            guildId = payload.guild_id
-            guild = self.client.get_guild(guildId)
-            try:
-                role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
-            except KeyError:
-                print("KeyError raised in emoji to role search")
-                return
-            if role is not None:
-                member = guild.get_member(payload.user_id)
-                if member is not None:
-                    await member.add_roles(role)
-                    print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
-                else:
-                    print("Member not found")
-            else:
-                print("Role not found")
-        except KeyError:
-            return
-        except Exception as e:
-            print(e)
-            return
+        await self.updateRoles(payload, True)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        reactMessageId = str(payload.message_id)
-        try:
-            #not found is handled by KeyError except
-            associations = self.roleassocdict[reactMessageId]
-
-            guildId = payload.guild_id
-            guild = self.client.get_guild(guildId)
-            try:
-                role = discord.utils.get(guild.roles, name = associations[payload.emoji.name])
-            except KeyError:
-                print("KeyError raised in emoji to role search")
-                return
-            if role is not None:
-                member = guild.get_member(payload.user_id)
-                if member is not None:
-                    await member.remove_roles(role)
-                    print(f"{member.name}#{member.discriminator} was unassigned the role {role.name}")
-                else:
-                    print("Member not found")
-            else:
-                print("Role not found")
-        except KeyError:
-            return
-        except Exception as e:
-            print(e)
-            return
+        await self.updateRoles(payload, False)
 
     async def updateRoles(self, payload, addRoleBool : bool):
         reactMessageId = str(payload.message_id)
@@ -143,18 +94,30 @@ class RoleAssignment(commands.Cog):
             print(e)
             return
 
-
     @commands.command()
-    async def clearroleassignmentposts(self, ctx):
+    async def clearroleassignments(self, ctx):
+        """Delete current role assignment posts."""
         self.roleassocdict = {}
         await ctx.send(f"Role associations have been cleared. {str(self.roleassocdict)}")
 
-    @createroleassignmentpost.error
+    @commands.command()
+    async def showroleassignments(self, ctx):
+        """Show current role assignment posts."""
+        await ctx.send(str(self.roleassocdict))
+
+    @createroleassignment.error
     async def roleassignment_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Missing an argument. Format is ```.createroleassignmentpost {message_id}```')
 
-# TODO: implement on message delete event to remove message id from roleassoclist to end tracking
+    @commands.Cog.listener()
+    async def on_message_delete(self,message):
+        """Removes a deleted message from the list of messages that are tracked by updateRoles"""
+        try:
+            del self.roleassocdict[str(message.id)]
+            print('poll was removed from tracking')
+        except KeyError:
+            pass
 
 def setup(client):
     client.add_cog(RoleAssignment(client))
