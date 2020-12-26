@@ -57,7 +57,7 @@ class Announcements(commands.Cog):
             if arg1 is None:
                 arg1 = len(self.ann_list) - 1
             arg1 = int(arg1)
-            title = self.prompted_input(ctx, "Please enter the new title of the event: ")
+            title = await self.prompted_input(ctx, "Please enter the new title of the event: ")
             await self.assign_inarray(ctx, arg1, 1, title)
         except:
             await ctx.send("Incorrect usage of command: !mod_anntitle [eventID] [Title]")
@@ -69,30 +69,32 @@ class Announcements(commands.Cog):
             if arg1 is None:
                 arg1 = len(self.ann_list) - 1
             arg1 = int(arg1)
-            desc = self.prompted_input(ctx, "Please enter the new description of the event: ")
+            desc = await self.prompted_input(ctx, "Please enter the new description of the event: ")
             await self.assign_inarray(ctx, arg1, 2, desc)
         except:
             await ctx.send("Incorrect usage of command: !mod_anndesc [eventID] [description]")
 
     @commands.command()
     @has_permissions(manage_roles=True)
-    async def mod_annimage(self, ctx, arg1=None, arg2=None):
+    async def mod_annimage(self, ctx, arg1=None):
         try:
             if arg1 is None:
                 arg1 = len(self.ann_list) - 1
             arg1 = int(arg1)
-            await self.assign_inarray(ctx, arg1, 3, arg2)
+            img_url = await self.prompted_input(ctx, "Please enter the new image url of the event: ")
+            await self.assign_inarray(ctx, arg1, 3, img_url)
         except:
             await ctx.send("Incorrect usage of command: !mod_annimage [eventID] [image URL]")
 
     @commands.command()
     @has_permissions(manage_roles=True)
-    async def mod_annthumbnail(self, ctx, arg1=None, arg2=None):
+    async def mod_annthumbnail(self, ctx, arg1=None):
         try:
             if arg1 is None:
                 arg1 = len(self.ann_list) - 1
             arg1 = int(arg1)
-            await self.assign_inarray(ctx, arg1, 4, arg2)
+            img_url = await self.prompted_input(ctx, "Please enter the new thumbnail url of the event: ")
+            await self.assign_inarray(ctx, arg1, 4, img_url)
         except:
             await ctx.send("Incorrect usage of command: !mod_annthumbnail [eventID] [image URL]")
 
