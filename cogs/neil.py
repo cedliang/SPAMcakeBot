@@ -10,7 +10,7 @@ class Neil(commands.Cog):
     @commands.command()
     async def neil(self, ctx):
         if self.neildict is None:
-            with open("loremflattened.txt", encoding='utf8') as f:
+            with open("loremfinal.txt", encoding='utf8') as f:
                 readfile = f.read()
                 self.neildict = makerule(readfile, 2)
         wisetweet = makestring(self.neildict, random.randint(15,35))
