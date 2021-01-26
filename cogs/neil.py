@@ -19,7 +19,7 @@ class Neil(commands.Cog):
         timenow = datetime.now()
         timenowstring = timenow.strftime("%b %d")
         neilEmbed = discord.Embed(title = 'Neil deGrasse Tyson', description = None, color = discord.Colour.from_rgb(29, 161, 242))
-        neilEmbed.add_field(name = f'@neiltyson\t{timenowstring}', value = wisetweet, inline = True)
+        neilEmbed.add_field(name = f'@neiltyson\t\t{timenowstring}', value = wisetweet, inline = True)
         neilEmbed.set_thumbnail(url="https://pbs.twimg.com/profile_images/74188698/NeilTysonOriginsA-Crop_400x400.jpg")
 
         await ctx.send(embed = neilEmbed)
