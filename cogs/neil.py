@@ -20,11 +20,9 @@ class Neil(commands.Cog):
         timenowstring = timenow.strftime("%b %d")
         neilEmbed = discord.Embed(title = 'Neil deGrasse Tyson', description = None, color = discord.Colour.from_rgb(29, 161, 242))
         neilEmbed.add_field(name = f'@neiltyson\t{timenowstring}', value = wisetweet, inline = True)
-        neilEmbed.set_footer(text = f"This is a tweet generated using a Markov chain from 3000 real @neiltyson tweets.", icon_url = ctx.author.avatar_url)
         neilEmbed.set_thumbnail(url="https://pbs.twimg.com/profile_images/74188698/NeilTysonOriginsA-Crop_400x400.jpg")
 
         await ctx.send(embed = neilEmbed)
-
 
 def makerule(data, context):
     '''Make a rule dict for given data.'''
