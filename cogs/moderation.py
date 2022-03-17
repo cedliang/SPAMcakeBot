@@ -9,10 +9,7 @@ class Moderation(commands.Cog):
     @commands.command()
     async def purge(self, ctx, amount = 5):
         await ctx.channel.purge(limit = amount + 1)
-        if amount == 1:
-            pluralstring = 'message was'
-        else:
-            pluralstring = 'messages were'
+        pluralstring = 'message was' if amount == 1 else 'messages were'
         await ctx.send(f'{amount} {pluralstring} purged.')
 
     @commands.command()

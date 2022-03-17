@@ -34,12 +34,8 @@ class RoleAssignment(commands.Cog):
                 if not acceptable:
                     await ctx.send("Format not correct. Try again.")
                 else:
-                    splitassoclist = []
-                    for element in assoclist:
-                        splitassoclist.append(element.split(' ', 1))
-                    appenddict = {}
-                    for element in splitassoclist:
-                        appenddict[element[0]] = element[1]
+                    splitassoclist = [element.split(' ', 1) for element in assoclist]
+                    appenddict = {element[0]: element[1] for element in splitassoclist}
                     takingOptions = False
             self.roleassocdict[message_id] = appenddict
             await ctx.send(str(self.roleassocdict))
@@ -77,15 +73,14 @@ class RoleAssignment(commands.Cog):
                 return
             if role is not None:
                 member = guild.get_member(payload.user_id)
-                if member is not None:
-                    if addRoleBool:
-                        await member.add_roles(role)
-                        print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
-                    else:
-                        await member.remove_roles(role)
-                        print(f"{member.name}#{member.discriminator} was unassigned the role {role.name}")
-                else:
+                if member is None:
                     print("Member not found")
+                elif addRoleBool:
+                    await member.add_roles(role)
+                    print(f"{member.name}#{member.discriminator} was assigned the role {role.name}")
+                else:
+                    await member.remove_roles(role)
+                    print(f"{member.name}#{member.discriminator} was unassigned the role {role.name}")
             else:
                 print("Role not found")
         except KeyError:
@@ -98,7 +93,7 @@ class RoleAssignment(commands.Cog):
     async def clearroleassignments(self, ctx):
         """Delete current role assignment posts."""
         self.roleassocdict = {}
-        await ctx.send(f"Role associations have been cleared. {str(self.roleassocdict)}")
+        await ctx.send(f"Role associations have been cleared. {self.roleassocdict}")
 
     @commands.command()
     async def showroleassignments(self, ctx):

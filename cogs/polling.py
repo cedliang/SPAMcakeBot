@@ -45,14 +45,12 @@ class Polling(commands.Cog):
             takingOptions = True
             emojisDone = []
             while takingOptions:
-                echoOptionsString = ''
-                for option in options:
-                    echoOptionsString += f"{option[0]} {option[1]}\n"
+                echoOptionsString = ''.join(f"{option[0]} {option[1]}\n" for option in options)
                 await ctx.send(f"Type your poll answer.\nType the emote corresponding to the option first, then add a space, then type the answer. For example, \'👍 Yes\'.\nIf you are done with your options, type 'done'.\nCurrent options:\n{echoOptionsString}")
                 try:
                     option = await self.client.wait_for('message', check = lambda message: message.author == ctx.author, timeout = 120.0)
                     if option.content == 'done':
-                        if len(options) > 0:
+                        if options:
                             takingOptions = False
                         else:
                             await ctx.send("At least one option must be provided!")
@@ -90,9 +88,10 @@ class Polling(commands.Cog):
                 except ValueError:
                     await ctx.send("Invalid time entered. Please try again.")
 
-            optionsString = ''
-            for optionTuple in options:
-                optionsString += (f'{optionTuple[0]} {optionTuple[1]}\n')
+            optionsString = ''.join(
+                f'{optionTuple[0]} {optionTuple[1]}\n' for optionTuple in options
+            )
+
             pollEmbed = discord.Embed(title = f'Poll: {question}', description = description, color = discord.Colour.from_rgb(254, 254, 254))
             pollEmbed.add_field(name = 'Options (react to vote)', value = optionsString, inline = True)
             #blank fields to force new line
@@ -102,9 +101,10 @@ class Polling(commands.Cog):
             endtimestring = endtime.strftime("%m/%d/%Y, %H:%M:%S")
             pollEmbed.set_footer(text = f"Poll closes at {endtimestring}\nPoll created by {ctx.author.name}#{ctx.author.discriminator}", icon_url = ctx.author.avatar_url)
 
-            resultsstring = ''
-            for option in options:
-                resultsstring += f'{option[0]} ░░░░░░░░░░ 0% (0)\n'
+            resultsstring = ''.join(
+                f'{option[0]} ░░░░░░░░░░ 0% (0)\n' for option in options
+            )
+
             pollEmbed.add_field(name = 'Results', value = resultsstring, inline = True)
 
             await channel.send(embed = pollEmbed)
@@ -122,16 +122,15 @@ class Polling(commands.Cog):
 
             closeMessage = await channel.fetch_message(pollMessage.id)
             closeEmbed = closeMessage.embeds[0]
-            closeEmbed.title = '[Closed] ' + closeEmbed.title
+            closeEmbed.title = f'[Closed] {closeEmbed.title}'
             #change 'closes' in the footer to 'closed'
             currentFooterText = closeEmbed.footer.text
             authoriconurl = closeEmbed.footer.icon_url
-            newFooterText = currentFooterText[:10] + 'd' + currentFooterText[11:]
+            newFooterText = f'{currentFooterText[:10]}d{currentFooterText[11:]}'
             closeEmbed.set_footer(text = newFooterText, icon_url = authoriconurl)
             await message.edit(embed = closeEmbed)
             self.activePollMessageIDs.remove(pollMessage.id)
 
-        #timeout
         except asyncio.TimeoutError:
             await ctx.send('Poll creation timed out.')
             return
@@ -151,41 +150,39 @@ class Polling(commands.Cog):
 
     async def updatePollResults(self, payload):
         """Performs a count of the reactions of the message in which the poll is contained, and updates the Results field of the corresponding embed."""
-        if payload.message_id in self.activePollMessageIDs:
-            channel = await self.client.fetch_channel(payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
-            pollembed = message.embeds[0]
+        if payload.message_id not in self.activePollMessageIDs:
+            return
+        channel = await self.client.fetch_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        pollembed = message.embeds[0]
 
-            #makes shallow copy of reaction list and ensure entries are sorted in descending order
-            reactionslist = sorted(message.reactions[:], key = lambda reaction: reaction.count, reverse = True)
-            totalreactions = 0
-            #remove the bot's count to get the 'true' polling numbers
-            for reaction in reactionslist:
-                reaction.count -= 1
-                totalreactions += reaction.count
-            #removes existing embed
-            pollembed.remove_field(-1)
+        #makes shallow copy of reaction list and ensure entries are sorted in descending order
+        reactionslist = sorted(message.reactions[:], key = lambda reaction: reaction.count, reverse = True)
+        totalreactions = 0
+        #remove the bot's count to get the 'true' polling numbers
+        for reaction in reactionslist:
+            reaction.count -= 1
+            totalreactions += reaction.count
+        #removes existing embed
+        pollembed.remove_field(-1)
 
-            #add new embed
-            resultsstring = ''
-            for reaction in reactionslist:
-                if totalreactions > 0:
-                    reactPercentage = 100*(reaction.count / totalreactions)
-                else:
-                    reactPercentage = 0
-                nearestPercentage = round(reactPercentage)
-                fullBlocks = nearestPercentage // 10
-                rem = nearestPercentage - 10*fullBlocks
-                if rem >= 5:
-                    partialBlocks = 1
-                else:
-                    partialBlocks = 0
-                totalBlocks = partialBlocks + fullBlocks
-                blocksString = '█' * fullBlocks + partialBlocks*'▓' + (10-totalBlocks)*'░'
-                resultsstring += f'{reaction.emoji} {blocksString} {round(reactPercentage,1)}% ({reaction.count})\n'
-            pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
+        #add new embed
+        resultsstring = ''
+        for reaction in reactionslist:
+            if totalreactions > 0:
+                reactPercentage = 100*(reaction.count / totalreactions)
+            else:
+                reactPercentage = 0
+            nearestPercentage = round(reactPercentage)
+            fullBlocks = nearestPercentage // 10
+            rem = nearestPercentage - 10*fullBlocks
+            partialBlocks = 1 if rem >= 5 else 0
+            totalBlocks = partialBlocks + fullBlocks
+            blocksString = '█' * fullBlocks + partialBlocks*'▓' + (10-totalBlocks)*'░'
+            resultsstring += f'{reaction.emoji} {blocksString} {round(reactPercentage,1)}% ({reaction.count})\n'
+        pollembed.add_field(name = 'Results', value = resultsstring, inline = True)
 
-            await message.edit(embed = pollembed)
+        await message.edit(embed = pollembed)
 
     @commands.Cog.listener()
     async def on_message_delete(self,message):
@@ -205,7 +202,7 @@ class Polling(commands.Cog):
     @commands.command()
     async def checkactivepolls(self, ctx):
         """Prints current active polls in terminal."""
-        print(str(self.activePollMessageIDs))
+        print(self.activePollMessageIDs)
 
 def setup(client):
     client.add_cog(Polling(client))
