@@ -152,8 +152,17 @@ class Announcements(commands.Cog):
         embed_list = discord.Embed()
         embed_list.title = "All Created Events: "
         for i in range(ann_len):
-            outstr = "Target Channel: " + str(self.ann_list[i][5]) + "\n Description: " + str(self.ann_list[i][2])
-            embed_list.add_field(name=str(self.ann_list[i][0]) + " - " + str(self.ann_list[i][1]), value=outstr)
+            outstr = (
+                f"Target Channel: {str(self.ann_list[i][5])}"
+                + "\n Description: "
+                + str(self.ann_list[i][2])
+            )
+
+            embed_list.add_field(
+                name=f'{str(self.ann_list[i][0])} - {str(self.ann_list[i][1])}',
+                value=outstr,
+            )
+
         await ctx.send(embed=embed_list)
 
     @commands.command()

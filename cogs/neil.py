@@ -45,9 +45,7 @@ def makestring(rule, length):
 
     while not validstart:
         oldwords = random.choice(list(rule.keys())).split(' ') #random starting words
-        if oldwords[0] == '':
-            pass
-        else:
+        if oldwords[0] != '':
             if (ord(oldwords[0][0]) >= 65) and (ord(oldwords[0][0]) <= 90):
                 validstart = True
             elif ord(oldwords[0][0]) >= 97 and ord(oldwords[0][0]) <= 122:
@@ -56,11 +54,11 @@ def makestring(rule, length):
 
     string = ' '.join(oldwords) + ' '
 
-    for i in range(length):
+    for _ in range(length):
         try:
             key = ' '.join(oldwords)
             newword = random.choice(rule[key])
-            string += newword + ' '
+            string += f'{newword} '
             for word in range(len(oldwords)):
                 oldwords[word] = oldwords[(word + 1) % len(oldwords)]
             oldwords[-1] = newword
@@ -70,7 +68,7 @@ def makestring(rule, length):
 
             lastperiodindex = string.rfind(".")
             if lastperiodindex == -1:
-                return string[0:len(string)-1] + "."
+                return string[:-1] + "."
             string = string[:lastperiodindex+1]
             return string
 
@@ -78,7 +76,7 @@ def makestring(rule, length):
         string = string[0].upper() + string[1:]
     lastperiodindex = string.rfind(".")
     if lastperiodindex == -1:
-        return string[0:len(string)-1] + "."
+        return string[:-1] + "."
     string = string[:lastperiodindex+1]
     return string
 
